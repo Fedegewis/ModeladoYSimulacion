@@ -1,93 +1,45 @@
 # ModeladoYSimulacion
-Codigos de modelado y simulacion ordenado por temas
 
-# 📦 Proyecto XYZ
+Este repositorio contiene los códigos de la materia Modelado y Simulación, enfocados en la resolución de ecuaciones no lineales usando el método de Bisección. Los ejercicios están organizados por tema y dificultad.
 
-Este proyecto contiene [breve descripción del proyecto].  
-Sigue estos pasos para descargarlo e instalar las dependencias necesarias.
+## ⚙️ Requisitos
 
----
+Para ejecutar los scripts, asegúrate de tener **Python 3.10+** y **pip** instalados.
 
-## 🚀 Requisitos previos
+Las librerías necesarias para todos los ejercicios son:
+- **`numpy`**: para operaciones matemáticas.
+- **`matplotlib`**: para la visualización de gráficos.
+- **`tabulate`**: para la presentación de tablas de resultados.
 
-Asegúrate de tener instalado:
+## 🚀 Puesta en marcha
 
-- [Git](https://git-scm.com/downloads)
-- [Python 3.10+](https://www.python.org/downloads/)
-- [pip](https://pip.pypa.io/en/stable/installation/)
+1.  **Clonar el repositorio:**
 
-Puedes verificar que están instalados con:
-```bash
-git --version
-python --version
-pip --version
-📥 Descargar el repositorio
-bash
-Copiar
-Editar
-git clone https://github.com/usuario/repositorio.git
-cd repositorio
-📚 Instalar dependencias
-Todas las librerías necesarias están listadas en requirements.txt.
-Para instalarlas, ejecuta:
+    ```bash
+    git clone [https://github.com/Fedegewis/ModeladoYSimulacion.git](https://github.com/Fedegewis/ModeladoYSimulacion.git)
+    cd ModeladoYSimulacion
+    ```
 
-bash
-Copiar
-Editar
-pip install -r requirements.txt
-💡 Si no existe el archivo requirements.txt, puedes generarlo desde el código con:
+2.  **Instalar dependencias:**
 
-bash
-Copiar
-Editar
-pip freeze > requirements.txt
-▶️ Ejecutar el proyecto
-Dependiendo del proyecto, puede que debas correr:
+    Te recomiendo crear un archivo `requirements.txt` para automatizar la instalación de las librerías. Para ello, en la terminal, ejecuta:
 
-bash
-Copiar
-Editar
-python main.py
-O el archivo principal que indique la documentación.
+    ```bash
+    pip freeze > requirements.txt
+    ```
 
-🛠 Problemas comunes
-Si tienes varios Python instalados, usa:
+    Luego, instala todas las librerías listadas con:
 
-bash
-Copiar
-Editar
-python3 -m pip install -r requirements.txt
-Si trabajas en un entorno virtual:
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-bash
-Copiar
-Editar
-python -m venv venv
-source venv/bin/activate  # Mac/Linux
-venv\Scripts\activate     # Windows
-📄 Licencia
-Este proyecto está bajo la licencia MIT (modificar según corresponda).
+3.  **Ejecutar los ejercicios:**
 
-yaml
-Copiar
-Editar
+    Puedes ejecutar cada archivo `.py` de forma individual desde la terminal. Por ejemplo:
 
----
+    ```bash
+    python "2 Cuatrimestre 2025/Modelado y Simulacion/Ejercicio 1.py"
+    ```
 
-Si querés, te puedo generar también un **`requirements.txt` automático** para que acompañe este README y no tengas que listar las librerías a mano. Así cualquiera que clone el repo solo ejecuta un comando y ya.  
-¿Querés que te lo arme?
-
-
-
-
-
-
-
-
-Preguntar a ChatGPT
-
-
-
-
-
-ChatGPT puede cometer errores. Considera verificar la información importante.
+    O simplemente abrir el archivo en **Spyder** y ejecutarlo directamente desde el entorno.
