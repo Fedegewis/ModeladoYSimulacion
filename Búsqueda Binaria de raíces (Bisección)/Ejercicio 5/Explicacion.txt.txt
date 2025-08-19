@@ -1,0 +1,145 @@
+1. ¿Qué significa "converger a cero"?
+En este contexto, "converger a cero" NO es el concepto de límites, sino que significa "la función se hace cero en algún punto del intervalo". Es decir, buscamos valores de x donde f(x) = 0.
+python# La función "converge a cero" si existe x tal que f(x) = 0
+# Esto es equivalente a encontrar las RAÍCES de la función
+2. ¿Cómo encuentro las raíces algebraicamente?
+Para f(x) = (x + 2)(x + 1)(x - 1)³(x - 2), uso la propiedad del producto cero:
+Un producto es cero ⟺ Al menos uno de los factores es cero
+Por tanto:
+
+(x + 2) = 0  →  x = -2
+(x + 1) = 0  →  x = -1
+(x - 1)³ = 0  →  x = 1
+(x - 2) = 0  →  x = 2
+Explicación Detallada: Raíces y MultiplicidadCódigo import numpy as np
+import matplotlib.pyplot as plt
+
+# Función original
+def f(x):
+    return (x + 2) * (x + 1) * (x - 1)**3 * (x - 2)
+
+# Función para demostrar el concepto de multiplicidad
+def demostrar_multiplicidad():
+    print("CONCEPTO DE MULTIPLI3. ¿Cómo sé que tiene multiplicidad 3 en x = 1?
+La multiplicidad se ve directamente en la forma factorizada:
+f(x) = (x + 2)(x + 1)(x - 1)³(x - 2)
+                      ↑
+                  exponente 3
+Teoría matemática:
+
+El factor (x - 1) aparece 3 veces en la factorización
+Esto significa que x = 1 es una raíz de multiplicidad 3
+Matemáticamente: f(1) = f'(1) = f''(1) = 0, pero f'''(1) ≠ 0
+
+4. ¿Cómo sé si cruza o toca el eje?
+Regla fundamental:
+
+Multiplicidad IMPAR (1, 3, 5...): La función CRUZA el eje X
+Multiplicidad PAR (2, 4, 6...): La función TOCA el eje X pero no cruza
+
+En nuestro caso:
+
+x = -2, -1, 2: multiplicidad 1 (impar) → CRUZAN el eje
+x = 1: multiplicidad 3 (impar) → CRUZA el eje (pero con forma más suave)
+
+5. ¿Cómo verifico convergencia usando el Teorema del Valor Intermedio?
+Teorema: Si f es continua en [a,b] y f(a) × f(b) < 0, entonces ∃c ∈ (a,b) tal que f(c) = 0
+python# Ejemplo: intervalo [-3, 2.5]
+a, b = -3, 2.5
+fa = f(-3) = (-3+2)(-3+1)(-3-1)³(-3-2) = (-1)(-2)(-4)³(-5) = -320
+fb = f(2.5) = (2.5+2)(2.5+1)(2.5-1)³(2.5-2) = (4.5)(3.5)(1.5)³(0.5) > 0
+
+# Como fa < 0 y fb > 0, HAY AL MENOS UNA RAÍZ en [-3, 2.5]
+6. ¿Por qué todos los intervalos "convergen a cero"?
+Porque cada intervalo contiene al menos una raíz:
+
+[-3, 2.5]: Contiene x = -2, -1, 1, 2 (¡las 4 raíces!)
+[-2.5, 3]: Contiene x = -2, -1, 1, 2 (¡las 4 raíces!)
+[-1.75, 1.5]: Contiene x = -1, 1 (2 raíces)
+[-1.5, 1.75]: Contiene x = -1, 1 (2 raíces)
+
+El código simplemente verifica si las raíces conocidas (-2, -1, 1, 2) están dentro de cada intervalo. Si están, entonces la función "converge a cero" en ese intervalo.
+¡Ejecuta el nuevo código y verás todas estas explicaciones con ejemplos gráficos!ReintentarClaude aún no tiene la capacidad de ejecutar el código que genera.FQue hace ese codigo que me pasaste, el ultimo??EditarTe explico paso a paso qué hace el último código que te pasé:
+Función principal: main()
+Ejecuta 4 demostraciones educativas en secuencia:
+1. demostrar_multiplicidad()
+pythondef demostrar_multiplicidad():
+¿Qué hace?
+
+Calcula f(1), f'(1), f''(1), f'''(1) en x = 1
+Demuestra matemáticamente por qué x = 1 tiene multiplicidad 3
+Muestra que las primeras 3 derivadas son cero, pero la 4ta no
+
+Salida esperada:
+f(1) = 0
+f'(1) = 0  
+f''(1) = 0
+f'''(1) ≠ 0
+Esto prueba que la multiplicidad es exactamente 3.
+2. teorema_valor_intermedio()
+pythondef teorema_valor_intermedio():
+¿Qué hace?
+
+Explica el Teorema del Valor Intermedio
+Toma el intervalo [-3, 2.5] como ejemplo
+Calcula f(-3) y f(2.5)
+Verifica si tienen signos opuestos
+Demuestra por qué debe haber una raíz
+
+Ejemplo de salida:
+f(-3) = -320 (negativo)
+f(2.5) = +valor positivo
+Como tienen signos opuestos → HAY AL MENOS UNA RAÍZ
+3. graficar_multiplicidades()
+pythondef graficar_multiplicidades():
+¿Qué hace?
+
+Crea 4 gráficos que muestran cómo se comportan las raíces según su multiplicidad
+Grafica:
+
+f(x) = (x-1)¹ → multiplicidad 1
+f(x) = (x-1)² → multiplicidad 2
+f(x) = (x-1)³ → multiplicidad 3
+f(x) = (x-1)⁴ → multiplicidad 4
+
+
+
+Lo que verás:
+
+Multiplicidad 1: La curva cruza el eje X
+Multiplicidad 2: La curva toca el eje X (parábola)
+Multiplicidad 3: La curva cruza pero más suavemente
+Multiplicidad 4: La curva toca el eje X (más plana)
+
+4. verificar_convergencia_paso_a_paso()
+pythondef verificar_convergencia_paso_a_paso():
+¿Qué hace?
+Para cada intervalo (a, b, c, d), ejecuta estos 4 pasos:
+Paso 1: Evalúa f(a) y f(b)
+Paso 2: Verifica si hay cambio de signo
+Paso 3: Identifica qué raíces están en el intervalo
+Paso 4: Concluye si converge a cero
+Ejemplo de salida:
+a) Intervalo [-3, 2.5]:
+Paso 1 - f(-3) = -320, f(2.5) = +valor
+Paso 2 - Cambio de signo: SÍ
+Paso 3 - Raíces en el intervalo: [-2, -1, 1, 2]
+Paso 4 - ¿Converge a cero?: SÍ
+¿Cuál es el objetivo de este código?
+No es para resolver el problema, sino para ENSEÑARTE la teoría detrás:
+
+Cómo identificar multiplicidad mirando la forma factorizada
+Por qué una multiplicidad impar cruza el eje
+Cómo aplicar el Teorema del Valor Intermedio
+Qué significa "converger a cero" en este contexto
+Cómo verificar paso a paso si hay raíces en un intervalo
+
+Diferencia con el primer código:
+
+Primer código: Resuelve el problema y da la respuesta
+Segundo código: Te explica por qué esa es la respuesta
+
+Es como la diferencia entre:
+
+Darte la respuesta de una ecuación
+Enseñarte paso a paso cómo resolver ecuaciones
