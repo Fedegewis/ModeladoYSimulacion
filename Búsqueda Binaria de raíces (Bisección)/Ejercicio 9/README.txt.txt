@@ -1,72 +1,70 @@
 
 
-# 1) Planteo
+1. ¿Qué es una iteración de punto fijo?
 
-La iteración de punto fijo es $x = g(x)$ con
+Tenemos una función g(x) = x²/2 + 2
+Buscamos un valor x* tal que x* = g(x*) (punto fijo)
+El método iterativo es: x_{n+1} = g(x_n)
 
-$$
-g(x)=\frac{5}{x^{2}}+2 .
-$$
+2. Condición teórica de convergencia
+Para que la iteración converja, necesitamos:
 
-Derivada:
+|g'(x)| < 1 en todo el intervalo [a,b]
+En nuestro caso: g'(x) = x
+Por tanto: |x| < 1, es decir, x ∈ (-1, 1)
 
-$$
-g'(x) = -\frac{10}{x^{3}},\qquad |g'(x)|=\frac{10}{|x|^{3}}.
-$$
+3. Análisis matemático
 
-Para que la iteración converja por el teorema del punto fijo en un intervalo $[a,b]$ necesitamos dos cosas:
+Puntos fijos: Resolvemos x = x²/2 + 2
+Reordenando: x² - 2x + 4 = 0
+Discriminante: Δ = 4 - 16 = -12 < 0
+Resultado: No hay puntos fijos reales (solo complejos: 1 ± i√3)
 
-1. $g([a,b])\subset [a,b]$ (la función lleva el intervalo en sí mismo).
-2. Existe $k<1$ tal que $\max_{x\in[a,b]}|g'(x)|\le k$.
+4. Respuesta al ejercicio
 
-Como $|g'(x)|=10/x^{3}$ en $x>0$, la condición $|g'(x)|<1$ da
+Intervalo de convergencia teórica: [-1, 1]
+Exactitud: 10⁻¹³
+Paradoja: Aunque la iteración es contractiva en [-1, 1], no converge porque no existe punto fijo real
 
-$$
-x^{3}>10\quad\Rightarrow\quad x> \sqrt[3]{10}\approx 2.1544.
-$$
+5. ¿Por qué es importante esto?
 
-Nuestro punto fijo real (solución de $x = 5/x^2 + 2$) es aproximadamente $2.690647448$ (un único fijo real positivo).
-
-# 2) Elegir un intervalo que funcione
-
-Elegimos por ejemplo $[a,b]=[2.3,\,3]$.
-
-Comprobaciones:
-
-* Para $x\in[2.3,3]$: $\max |g'(x)|$ ocurre en $x=a=2.3$:
-
-  $$
-  k=\frac{10}{2.3^{3}}\approx 0.8219<1.
-  $$
-* $g$ es decreciente en $x>0$. Calculamos los extremos:
-
-  * $g(2.3)=\dfrac{5}{2.3^2}+2\approx 2.945\le 3$.
-  * $g(3)=\dfrac{5}{9}+2\approx 2.555\ge 2.3$.
-    Por tanto $g([2.3,3])\subset[2.3,3]$.
-
-Entonces $[2.3,3]$ cumple las hipótesis del teorema del punto fijo y la iteración converge a la solución con tasa de contracción $k\approx0.8219$.
-
-# 3) Cota teórica de iteraciones (opcional)
-
-Usando la cota de contracción,
-
-$$
-|x_n - p| \le \frac{k^n}{1-k}\,|x_1-x_0|.
-$$
-
-Si tomas $x_0=3$, $x_1=g(3)$ y la tolerancia $10^{-3}$, la cota teórica da que podrían necesitarse hasta \~40 iteraciones en el peor caso. En la práctica suele converger antes.
+Demuestra que la condición |g'(x)| < 1 es necesaria pero no suficiente
+También necesitamos que exista un punto fijo real
+En aplicaciones prácticas, siempre verificar ambas condiciones
 
 
-# 5) Resultado numérico (si lo corres ahora)
 
-Si ejecutás el código obtendrás la convergencia al punto fijo aproximadamente:
+Explicación del error:
 
-$$
-x \approx 2.690647448\ \text{(aprox.)}
-$$
+La función g(x) = x²/2 + 2 hace que los valores crezcan exponencialmente
 
-y el número real de iteraciones dependerá de la tolerancia; con tol $=10^{-3}$ normalmente converge en pocas decenas de pasos (mucho menos que la cota teórica de 40 en la práctica).
+Si empezamos con x₀ = 3:
+x₁ = g(3) = 9/2 + 2 = 6.5
+x₂ = g(6.5) = 42.25/2 + 2 = 23.125
+x₃ = g(23.125) ≈ 267.06...
+En pocas iteraciones, el número se vuelve enorme
 
----
 
-Si querés, lo corro yo aquí y te muestro la salida exacta, o te doy otra opción de intervalo (por ejemplo $[2.25,3]$ también funciona) o cambio el criterio de parada (por ejemplo usar $|x_{n+1}-x_n|<\text{tol}$ o $|g(x_n)-x_n|<\text{tol}$). ¿Querés que lo ejecute y te pegue la salida?
+Por eso la condición |g'(x)| < 1 es crucial:
+
+Cuando |g'(x)| ≥ 1, la función es "expansiva"
+Los valores se alejan del punto fijo en lugar de acercarse
+Eventualmente causan overflow
+
+
+
+Lo que demuestra el código corregido:
+
+Intervalo [-1, 1]: Aquí |g'(x)| = |x| < 1, pero aún diverge porque no hay punto fijo real
+Fuera de [-1, 1]: Los valores explotan rápidamente (overflow)
+
+Conceptos importantes:
+
+Convergencia teórica ≠ convergencia práctica
+La condición |g'(x)| < 1 es necesaria pero no suficiente
+También necesitamos que exista un punto fijo real
+
+Ejecuta el código corregido - ahora maneja los overflows y te mostrará claramente:
+
+Dónde diverge por overflow (fuera de [-1,1])
+Dónde diverge pero de forma controlada (dentro de [-1,1])
