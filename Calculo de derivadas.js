@@ -2,33 +2,23 @@ import ast
 import math
 import tkinter as tk
 from tkinter import ttk, messagebox
-from typing import Callable, Optional
-
-try:
-    import numpy as np
-except ImportError:
-    np = None
+from typing import Callable, List, Tuple
+import sympy as sp
 
 try:
     from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
     import matplotlib.pyplot as plt
-    # Intentar establecer un estilo, si falla usar default
-    try:
-        plt.style.use('seaborn-v0_8')
-    except:
-        try:
-            plt.style.use('seaborn')
-        except:
-            pass  # Usar estilo por defecto
-except ImportError:
+    import numpy as np
+except Exception:
     FigureCanvasTkAgg = None
     plt = None
+    np = None
 
 
 def _make_safe_func(expr: str) -> Callable[[float], float]:
-    """Crear función segura desde expresión string"""
+    """Convierte expresión string a función evaluable de forma segura"""
     allowed_names = {k: getattr(math, k) for k in dir(math) if not k.startswith("__")}
-    allowed_names.update({"abs": abs, "pow": pow, "min": min, "max": max})
+    allowed_names.update({"abs": abs, "pow": pow})
     
     expr_ast = ast.parse(expr, mode='eval')
     for node in ast.walk(expr_ast):
@@ -50,366 +40,365 @@ def _make_safe_func(expr: str) -> Callable[[float], float]:
     return f
 
 
-def derivada_adelante(f: Callable[[float], float], x: float, h: float = 1e-5) -> float:
-    """Derivada usando diferencias hacia adelante"""
-    return (f(x + h) - f(x)) / h
-
-
-def derivada_atras(f: Callable[[float], float], x: float, h: float = 1e-5) -> float:
-    """Derivada usando diferencias hacia atrás"""
-    return (f(x) - f(x - h)) / h
-
-
-def derivada_centrada(f: Callable[[float], float], x: float, h: float = 1e-5) -> float:
-    """Derivada usando diferencias centrales"""
+def numerical_derivative(f: Callable[[float], float], x: float, h: float = 1e-6) -> float:
+    """Calcula derivada numérica usando diferencias centrales"""
     return (f(x + h) - f(x - h)) / (2 * h)
 
 
-def derivada_cinco_puntos(f: Callable[[float], float], x: float, h: float = 1e-3) -> float:
-    """Derivada usando fórmula de 5 puntos"""
-    return (-f(x + 2*h) + 8*f(x + h) - 8*f(x - h) + f(x - 2*h)) / (12 * h)
-
-
-def segunda_derivada(f: Callable[[float], float], x: float, h: float = 1e-4) -> float:
-    """Segunda derivada"""
-    return (f(x + h) - 2*f(x) + f(x - h)) / (h**2)
-
-
-def crear_puntos(x_min, x_max, num_puntos):
-    """Crear lista de puntos"""
-    if np is not None:
-        return np.linspace(x_min, x_max, num_puntos)
-    else:
-        step = (x_max - x_min) / (num_puntos - 1)
-        return [x_min + i * step for i in range(num_puntos)]
-
-
-def calcular_derivadas_rango(f: Callable[[float], float], x_min: float, x_max: float, 
-                           num_puntos: int = 100, h: float = 1e-5):
-    """Calcular derivadas en un rango de valores"""
-    x_vals = crear_puntos(x_min, x_max, num_puntos)
-    resultados = []
+def symbolic_derivative(expr: str) -> str:
+    """Calcula derivada simbólica usando SymPy"""
+    try:
+        # Definir la variable simbólica
+        x = sp.Symbol('x')
+        
+        # Convertir la expresión a SymPy
+        # Reemplazar funciones comunes por equivalentes de SymPy
+        expr_sympy = expr.replace('sqrt', 'sp.sqrt')
+        expr_sympy = expr_sympy.replace('sin', 'sp.sin')
+        expr_sympy = expr_sympy.replace('cos', 'sp.cos')
+        expr_sympy = expr_sympy.replace('tan', 'sp.tan')
+        expr_sympy = expr_sympy.replace('log', 'sp.log')
+        expr_sympy = expr_sympy.replace('exp', 'sp.exp')
+        expr_sympy = expr_sympy.replace('asin', 'sp.asin')
+        expr_sympy = expr_sympy.replace('acos', 'sp.acos')
+        expr_sympy = expr_sympy.replace('atan', 'sp.atan')
+        expr_sympy = expr_sympy.replace('sinh', 'sp.sinh')
+        expr_sympy = expr_sympy.replace('cosh', 'sp.cosh')
+        expr_sympy = expr_sympy.replace('tanh', 'sp.tanh')
+        
+        # Evaluar la expresión simbólica
+        func = eval(expr_sympy, {'x': x, 'sp': sp, 'pi': sp.pi, 'e': sp.E})
+        
+        # Calcular la derivada
+        derivative = sp.diff(func, x)
+        
+        # Simplificar y convertir a string
+        derivative_simplified = sp.simplify(derivative)
+        return str(derivative_simplified)
     
-    for x in x_vals:
-        try:
-            fx = f(x)
-            df_adelante = derivada_adelante(f, x, h)
-            df_atras = derivada_atras(f, x, h)
-            df_centrada = derivada_centrada(f, x, h)
-            df_cinco_pts = derivada_cinco_puntos(f, x, h)
-            d2f = segunda_derivada(f, x, h)
-            
-            resultados.append((x, fx, df_adelante, df_atras, df_centrada, 
-                             df_cinco_pts, d2f))
-        except:
-            continue
-    
-    return resultados
+    except Exception as e:
+        raise ValueError(f"Error en derivada simbólica: {str(e)}")
 
 
-class DerivadasGUI:
+def evaluate_derivative_at_points(f_expr: str, df_expr: str, x_points: List[float]) -> List[Tuple[float, float, float, float]]:
+    """Evalúa función y derivada en puntos específicos"""
+    try:
+        f = _make_safe_func(f_expr)
+        df = _make_safe_func(df_expr.replace('sp.', '').replace('sqrt', 'math.sqrt').replace('log', 'math.log'))
+        
+        results = []
+        for x in x_points:
+            try:
+                f_val = f(x)
+                df_val = df(x)
+                df_num = numerical_derivative(f, x)
+                error = abs(df_val - df_num) if not math.isnan(df_num) else float('inf')
+                results.append((x, f_val, df_val, df_num, error))
+            except:
+                results.append((x, float('nan'), float('nan'), float('nan'), float('inf')))
+        
+        return results
+    except Exception as e:
+        raise ValueError(f"Error evaluando derivada: {str(e)}")
+
+
+class DerivativasGUI:
     def __init__(self, master: tk.Tk):
         self.master = master
-        master.title("Calculadora de Derivadas Numéricas")
-        master.geometry("1000x700")
+        master.title("Calculadora de Derivadas")
+        master.geometry("900x700")
         self._build_widgets()
-        
+
     def _build_widgets(self):
         # Frame principal
         main_frame = ttk.Frame(self.master, padding=10)
         main_frame.grid(row=0, column=0, sticky='nsew')
         
+        # Configurar el grid
         self.master.columnconfigure(0, weight=1)
         self.master.rowconfigure(0, weight=1)
         main_frame.columnconfigure(1, weight=1)
         
+        # Título
+        title_label = ttk.Label(main_frame, text="CALCULADORA DE DERIVADAS", 
+                               font=('Arial', 14, 'bold'))
+        title_label.grid(row=0, column=0, columnspan=4, pady=(0, 15))
+        
         # Entrada de función
-        ttk.Label(main_frame, text="Función f(x):").grid(row=0, column=0, sticky='w', pady=5)
-        self.expr_var = tk.StringVar(value="x**2 + 2*x + 1")
-        ttk.Entry(main_frame, textvariable=self.expr_var, width=50).grid(row=0, column=1, columnspan=3, sticky='we', pady=5)
+        ttk.Label(main_frame, text="f(x) =", font=('Arial', 10, 'bold')).grid(row=1, column=0, sticky='w', padx=(0, 5))
+        self.expr_var = tk.StringVar(value="x**2 + 3*x + 2")
+        expr_entry = ttk.Entry(main_frame, textvariable=self.expr_var, width=50, font=('Arial', 10))
+        expr_entry.grid(row=1, column=1, columnspan=2, sticky='we', padx=(0, 5))
         
-        # Parámetros para punto específico
-        params_frame = ttk.LabelFrame(main_frame, text="Cálculo en punto específico", padding=10)
-        params_frame.grid(row=1, column=0, columnspan=4, sticky='we', pady=10)
+        # Botón calcular derivada
+        calc_button = ttk.Button(main_frame, text="Calcular f'(x)", command=self.calculate_derivative)
+        calc_button.grid(row=1, column=3, padx=(5, 0))        
+        # Resultado de derivada simbólica
+        ttk.Label(main_frame, text="f'(x) =", font=('Arial', 10, 'bold')).grid(row=2, column=0, sticky='w', padx=(0, 5), pady=(10, 5))
+        self.derivative_var = tk.StringVar(value="Presiona 'Calcular f'(x)' para obtener la derivada")        
+        derivative_entry = ttk.Entry(main_frame, textvariable=self.derivative_var, width=50, 
+                                   font=('Arial', 10), state='readonly')
+        derivative_entry.grid(row=2, column=1, columnspan=2, sticky='we', padx=(0, 5), pady=(10, 5))
         
-        ttk.Label(params_frame, text="x:").grid(row=0, column=0, padx=5)
-        self.x_var = tk.StringVar(value="1.0")
-        ttk.Entry(params_frame, textvariable=self.x_var, width=10).grid(row=0, column=1, padx=5)
+        # Botón copiar derivada
+        copy_button = ttk.Button(main_frame, text="Copiar", command=self.copy_derivative)
+        copy_button.grid(row=2, column=3, padx=(5, 0), pady=(10, 5))
         
-        ttk.Label(params_frame, text="h:").grid(row=0, column=2, padx=5)
-        self.h_var = tk.StringVar(value="1e-5")
-        ttk.Entry(params_frame, textvariable=self.h_var, width=10).grid(row=0, column=3, padx=5)
+        # Separador
+        separator = ttk.Separator(main_frame, orient='horizontal')
+        separator.grid(row=3, column=0, columnspan=4, sticky='we', pady=15)
         
-        ttk.Button(params_frame, text="Calcular en Punto", 
-                  command=self.calcular_punto).grid(row=0, column=4, padx=10)
+        # Sección de evaluación
+        eval_label = ttk.Label(main_frame, text="EVALUAR EN PUNTOS ESPECÍFICOS", 
+                              font=('Arial', 12, 'bold'))
+        eval_label.grid(row=4, column=0, columnspan=4, pady=(0, 10))
         
-        # Parámetros para rango
-        rango_frame = ttk.LabelFrame(main_frame, text="Cálculo en rango", padding=10)
-        rango_frame.grid(row=2, column=0, columnspan=4, sticky='we', pady=10)
+        # Entrada de puntos
+        ttk.Label(main_frame, text="Puntos x (separados por comas):").grid(row=5, column=0, sticky='w')
+        self.points_var = tk.StringVar(value="0, 1, 2, -1, 0.5")
+        points_entry = ttk.Entry(main_frame, textvariable=self.points_var, width=30)
+        points_entry.grid(row=5, column=1, sticky='we', padx=(5, 5))
         
-        ttk.Label(rango_frame, text="x_min:").grid(row=0, column=0, padx=5)
-        self.x_min_var = tk.StringVar(value="-2")
-        ttk.Entry(rango_frame, textvariable=self.x_min_var, width=8).grid(row=0, column=1, padx=5)
+        # Botón evaluar
+        eval_button = ttk.Button(main_frame, text="Evaluar", command=self.evaluate_points)
+        eval_button.grid(row=5, column=2, padx=(5, 0))
         
-        ttk.Label(rango_frame, text="x_max:").grid(row=0, column=2, padx=5)
-        self.x_max_var = tk.StringVar(value="2")
-        ttk.Entry(rango_frame, textvariable=self.x_max_var, width=8).grid(row=0, column=3, padx=5)
-        
-        ttk.Label(rango_frame, text="Puntos:").grid(row=0, column=4, padx=5)
-        self.puntos_var = tk.StringVar(value="50")
-        ttk.Entry(rango_frame, textvariable=self.puntos_var, width=8).grid(row=0, column=5, padx=5)
-        
-        ttk.Button(rango_frame, text="Calcular Rango", 
-                  command=self.calcular_rango).grid(row=0, column=6, padx=10)
-        
-        # Botones adicionales
-        botones_frame = ttk.Frame(main_frame)
-        botones_frame.grid(row=3, column=0, columnspan=4, pady=10)
-        
-        ttk.Button(botones_frame, text="Limpiar Todo", 
-                  command=self.limpiar_todo).grid(row=0, column=0, padx=5)
-        ttk.Button(botones_frame, text="Exportar Datos", 
-                  command=self.exportar_datos).grid(row=0, column=1, padx=5)
-        
-        # Resultado de punto específico
-        self.resultado_punto = tk.StringVar(value="Selecciona una función y un punto para calcular")
-        result_frame = ttk.LabelFrame(main_frame, text="Resultado en punto específico", padding=10)
-        result_frame.grid(row=4, column=0, columnspan=4, sticky='we', pady=10)
-        ttk.Label(result_frame, textvariable=self.resultado_punto, wraplength=800).grid(row=0, column=0, sticky='w')
+        # Botón limpiar todo
+        clear_button = ttk.Button(main_frame, text="Limpiar Todo", command=self.clear_all)
+        clear_button.grid(row=5, column=3, padx=(5, 0))
         
         # Tabla de resultados
-        tabla_frame = ttk.LabelFrame(main_frame, text="Tabla de resultados", padding=10)
-        tabla_frame.grid(row=5, column=0, columnspan=4, sticky='nsew', pady=10)
-        tabla_frame.columnconfigure(0, weight=1)
-        tabla_frame.rowconfigure(0, weight=1)
-        main_frame.rowconfigure(5, weight=1)
+        columns = ('x', 'f(x)', "f'(x) simbólica", "f'(x) numérica", "Error")
+        self.tree = ttk.Treeview(main_frame, columns=columns, show='headings', height=8)
         
-        # Treeview con scrollbars
-        tree_frame = ttk.Frame(tabla_frame)
-        tree_frame.grid(row=0, column=0, sticky='nsew')
-        tree_frame.columnconfigure(0, weight=1)
-        tree_frame.rowconfigure(0, weight=1)
-        
-        self.tree = ttk.Treeview(tree_frame, show='headings', height=8)
-        scrollbar_v = ttk.Scrollbar(tree_frame, orient="vertical", command=self.tree.yview)
-        scrollbar_h = ttk.Scrollbar(tree_frame, orient="horizontal", command=self.tree.xview)
-        self.tree.configure(yscrollcommand=scrollbar_v.set, xscrollcommand=scrollbar_h.set)
-        
-        self.tree.grid(row=0, column=0, sticky='nsew')
-        scrollbar_v.grid(row=0, column=1, sticky='ns')
-        scrollbar_h.grid(row=1, column=0, sticky='ew')
-        
-        # Configurar gráfico
-        if FigureCanvasTkAgg and plt:
-            grafico_frame = ttk.LabelFrame(main_frame, text="Gráfico", padding=10)
-            grafico_frame.grid(row=6, column=0, columnspan=4, sticky='nsew', pady=10)
-            main_frame.rowconfigure(6, weight=1)
-            
-            self.fig, (self.ax1, self.ax2) = plt.subplots(2, 1, figsize=(10, 6))
-            self.fig.tight_layout(pad=3.0)
-            
-            self.canvas = FigureCanvasTkAgg(self.fig, master=grafico_frame)
-            self.canvas.get_tk_widget().grid(row=0, column=0, sticky='nsew')
-            grafico_frame.columnconfigure(0, weight=1)
-            grafico_frame.rowconfigure(0, weight=1)
-        else:
-            ttk.Label(main_frame, text="matplotlib no disponible - No se pueden mostrar gráficos").grid(
-                row=6, column=0, columnspan=4, pady=20)
-            self.canvas = None
-            self.ax1 = None
-            self.ax2 = None
-    
-    def _configurar_tabla(self, columnas):
-        """Configurar columnas de la tabla"""
-        self.tree["columns"] = columnas
-        for col in columnas:
+        # Configurar columnas
+        for col in columns:
             self.tree.heading(col, text=col)
-            self.tree.column(col, width=100, anchor="center")
-    
-    def _llenar_tabla(self, datos):
-        """Llenar tabla con datos"""
-        # Limpiar tabla
-        for item in self.tree.get_children():
-            self.tree.delete(item)
+            self.tree.column(col, width=100, anchor='center')
         
-        # Agregar datos
-        for fila in datos:
-            valores = [f"{v:.6g}" if isinstance(v, (float, int)) else str(v) for v in fila]
-            self.tree.insert('', 'end', values=valores)
-    
-    def calcular_punto(self):
-        """Calcular derivadas en un punto específico"""
-        try:
-            f = _make_safe_func(self.expr_var.get())
-            x = float(self.x_var.get())
-            h = float(self.h_var.get())
-            
-            # Calcular todas las derivadas
-            fx = f(x)
-            df_adelante = derivada_adelante(f, x, h)
-            df_atras = derivada_atras(f, x, h)
-            df_centrada = derivada_centrada(f, x, h)
-            df_cinco_pts = derivada_cinco_puntos(f, x, h)
-            d2f = segunda_derivada(f, x, h)
-            
-            # Mostrar resultado
-            resultado = f"""Función: {self.expr_var.get()}
-Punto x = {x}, h = {h}
+        self.tree.grid(row=6, column=0, columnspan=4, pady=15, sticky='nsew')
+        main_frame.rowconfigure(6, weight=1)
+        
+        # Scrollbar para la tabla
+        scrollbar = ttk.Scrollbar(main_frame, orient='vertical', command=self.tree.yview)
+        scrollbar.grid(row=6, column=4, sticky='ns', pady=15)
+        self.tree.configure(yscrollcommand=scrollbar.set)
+        
+        # Frame para información adicional
+        info_frame = ttk.LabelFrame(main_frame, text="Información", padding=5)
+        info_frame.grid(row=7, column=0, columnspan=4, sticky='we', pady=(10, 0))
+        
+        # Mensaje informativo
+        info_text = ("Funciones soportadas: +, -, *, /, **, sqrt(), sin(), cos(), tan(), "
+                    "log(), exp(), asin(), acos(), atan(), sinh(), cosh(), tanh(), "
+                    "constantes: pi, e")
+        info_label = ttk.Label(info_frame, text=info_text, wraplength=800, justify='left')
+        info_label.grid(row=0, column=0, sticky='w')
+        
+        # Ejemplos
+        examples_text = ("Ejemplos: x**2 + 3*x + 1, sin(x)*cos(x), exp(x)/x, sqrt(x**2 + 1), "
+                        "log(x), tan(x), x**3 - 2*x**2 + x - 1")
+        examples_label = ttk.Label(info_frame, text=f"Ejemplos: {examples_text}", 
+                                  wraplength=800, justify='left', font=('Arial', 8))
+        examples_label.grid(row=1, column=0, sticky='w', pady=(5, 0))
+        
+        # Gráfico (si matplotlib está disponible)
+        if FigureCanvasTkAgg and plt and np:
+            self.setup_plot()
+        else:
+            no_plot_label = ttk.Label(main_frame, 
+                                    text="matplotlib/numpy no disponible - gráficos deshabilitados")
+            no_plot_label.grid(row=8, column=0, columnspan=4, pady=10)
+            self.fig = None
+            self.ax = None
+            self.canvas = None
 
-f({x}) = {fx:.8g}
-f'({x}) ≈ {df_centrada:.8g} (diferencias centrales - recomendado)
+    def setup_plot(self):
+        """Configura el área de gráficos"""
+        plot_frame = ttk.LabelFrame(self.master, text="Gráfico de f(x) y f'(x)", padding=5)
+        plot_frame.grid(row=0, column=1, sticky='nsew', padx=(10, 0))
+        
+        self.master.columnconfigure(1, weight=1)
+        
+        self.fig, (self.ax1, self.ax2) = plt.subplots(2, 1, figsize=(6, 8))
+        self.canvas = FigureCanvasTkAgg(self.fig, master=plot_frame)
+        self.canvas.get_tk_widget().grid(row=0, column=0, sticky='nsew')
+        
+        plot_frame.columnconfigure(0, weight=1)
+        plot_frame.rowconfigure(0, weight=1)
 
-Comparación de métodos:
-• Diferencias adelante:    {df_adelante:.8g}
-• Diferencias atrás:       {df_atras:.8g}  
-• Diferencias centrales:   {df_centrada:.8g}
-• Fórmula 5 puntos:        {df_cinco_pts:.8g}
-• Segunda derivada f''(x): {d2f:.8g}"""
-            
-            self.resultado_punto.set(resultado)
-            
-            # Configurar tabla para punto específico
-            columnas = ["Método", "Valor"]
-            self._configurar_tabla(columnas)
-            
-            datos = [
-                ("f(x)", fx),
-                ("Diff. Adelante", df_adelante),
-                ("Diff. Atrás", df_atras),
-                ("Diff. Centrales", df_centrada),
-                ("5 Puntos", df_cinco_pts),
-                ("Segunda derivada", d2f)
-            ]
-            
-            self._llenar_tabla(datos)
-            
-        except Exception as e:
-            messagebox.showerror("Error", f"Error en el cálculo: {str(e)}")
-    
-    def calcular_rango(self):
-        """Calcular derivadas en un rango de valores"""
+    def calculate_derivative(self):
+        """Calcula la derivada simbólica de la función"""
         try:
-            f = _make_safe_func(self.expr_var.get())
-            x_min = float(self.x_min_var.get())
-            x_max = float(self.x_max_var.get())
-            num_puntos = int(self.puntos_var.get())
-            h = float(self.h_var.get())
-            
-            # Calcular derivadas en el rango
-            resultados = calcular_derivadas_rango(f, x_min, x_max, num_puntos, h)
-            
-            if not resultados:
-                messagebox.showwarning("Advertencia", "No se pudieron calcular derivadas en el rango especificado")
+            expr = self.expr_var.get().strip()
+            if not expr:
+                messagebox.showerror("Error", "Por favor ingresa una función")
                 return
             
-            # Configurar tabla
-            columnas = ["x", "f(x)", "f'(x) Adel.", "f'(x) Atrás", "f'(x) Centr.", "f'(x) 5pts", "f''(x)"]
-            self._configurar_tabla(columnas)
-            self._llenar_tabla(resultados)
+            # Calcular derivada simbólica
+            derivative = symbolic_derivative(expr)
+            self.derivative_var.set(derivative)
             
-            # Actualizar resultado
-            self.resultado_punto.set(f"Calculadas derivadas para {len(resultados)} puntos en [{x_min}, {x_max}]")
-            
-            # Crear gráficos
-            if self.canvas and self.ax1 and self.ax2:
-                self._crear_graficos(resultados, f)
+            # Actualizar gráfico si está disponible
+            if self.canvas:
+                self.update_plot()
                 
-        except Exception as e:
-            messagebox.showerror("Error", f"Error en el cálculo: {str(e)}")
-    
-    def _crear_graficos(self, resultados, f):
-        """Crear gráficos de función y derivadas"""
-        try:
-            x_vals = [r[0] for r in resultados]
-            f_vals = [r[1] for r in resultados]
-            df_vals = [r[4] for r in resultados]  # Diferencias centrales
-            d2f_vals = [r[6] for r in resultados]  # Segunda derivada
+            messagebox.showinfo("Éxito", "Derivada calculada correctamente")
             
-            # Limpiar gráficos
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al calcular la derivada: {str(e)}")
+            self.derivative_var.set("Error en el cálculo")
+
+    def copy_derivative(self):
+        """Copia la derivada al portapapeles"""
+        derivative = self.derivative_var.get()
+        if derivative and derivative != "Presiona 'Calcular f'(x)' para obtener la derivada":
+            self.master.clipboard_clear()
+            self.master.clipboard_append(derivative)
+            messagebox.showinfo("Copiado", "Derivada copiada al portapapeles")
+        else:
+            messagebox.showwarning("Advertencia", "No hay derivada para copiar")
+
+    def evaluate_points(self):
+        """Evalúa la función y su derivada en puntos específicos"""
+        try:
+            # Verificar que hay una derivada calculada
+            derivative = self.derivative_var.get()
+            if not derivative or derivative == "Presiona 'Calcular f'(x)' para obtener la derivada":
+                messagebox.showerror("Error", "Primero calcula la derivada")
+                return
+            
+            # Obtener puntos
+            points_str = self.points_var.get().strip()
+            if not points_str:
+                messagebox.showerror("Error", "Por favor ingresa algunos puntos")
+                return
+            
+            # Parsear puntos
+            points = [float(p.strip()) for p in points_str.split(',')]
+            
+            # Evaluar
+            expr = self.expr_var.get()
+            results = evaluate_derivative_at_points(expr, derivative, points)
+            
+            # Limpiar tabla
+            for item in self.tree.get_children():
+                self.tree.delete(item)
+            
+            # Llenar tabla
+            for x, fx, dfx_sym, dfx_num, error in results:
+                values = (
+                    f"{x:.6g}",
+                    f"{fx:.6g}" if not math.isnan(fx) else "NaN",
+                    f"{dfx_sym:.6g}" if not math.isnan(dfx_sym) else "NaN",
+                    f"{dfx_num:.6g}" if not math.isnan(dfx_num) else "NaN",
+                    f"{error:.2e}" if error < float('inf') else "Inf"
+                )
+                self.tree.insert('', 'end', values=values)
+                
+        except ValueError as e:
+            messagebox.showerror("Error", f"Error en los puntos: {str(e)}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error evaluando: {str(e)}")
+
+    def update_plot(self):
+        """Actualiza los gráficos de f(x) y f'(x)"""
+        if not self.canvas:
+            return
+            
+        try:
+            expr = self.expr_var.get()
+            derivative = self.derivative_var.get()
+            
+            if not expr or not derivative or derivative.startswith("Presiona"):
+                return
+            
+            # Crear funciones
+            f = _make_safe_func(expr)
+            df_str = derivative.replace('sp.', '').replace('sqrt', 'math.sqrt').replace('log', 'math.log')
+            df = _make_safe_func(df_str)
+            
+            # Generar puntos para graficar
+            x_vals = np.linspace(-5, 5, 1000)
+            
+            # Evaluar funciones
+            f_vals = []
+            df_vals = []
+            
+            for x in x_vals:
+                try:
+                    f_val = f(x)
+                    df_val = df(x)
+                    if abs(f_val) > 100:  # Limitar valores extremos
+                        f_val = np.nan
+                    if abs(df_val) > 100:
+                        df_val = np.nan
+                    f_vals.append(f_val)
+                    df_vals.append(df_val)
+                except:
+                    f_vals.append(np.nan)
+                    df_vals.append(np.nan)
+            
+            # Limpiar y graficar
             self.ax1.clear()
             self.ax2.clear()
             
-            # Gráfico 1: Función y primera derivada
-            self.ax1.plot(x_vals, f_vals, 'b-', label='f(x)', linewidth=2)
-            self.ax1.plot(x_vals, df_vals, 'r--', label="f'(x)", linewidth=2)
-            self.ax1.axhline(y=0, color='k', linestyle='-', alpha=0.3)
-            self.ax1.axvline(x=0, color='k', linestyle='-', alpha=0.3)
-            self.ax1.set_xlabel('x')
-            self.ax1.set_ylabel('y')
-            self.ax1.set_title(f'Función: {self.expr_var.get()}')
-            self.ax1.legend()
+            # Gráfico de f(x)
+            self.ax1.plot(x_vals, f_vals, 'b-', linewidth=2, label='f(x)')
             self.ax1.grid(True, alpha=0.3)
+            self.ax1.set_title('Función f(x)', fontsize=10)
+            self.ax1.set_xlabel('x')
+            self.ax1.set_ylabel('f(x)')
+            self.ax1.legend()
             
-            # Gráfico 2: Primera y segunda derivada
-            self.ax2.plot(x_vals, df_vals, 'r-', label="f'(x)", linewidth=2)
-            self.ax2.plot(x_vals, d2f_vals, 'g-', label="f''(x)", linewidth=2)
-            self.ax2.axhline(y=0, color='k', linestyle='-', alpha=0.3)
-            self.ax2.axvline(x=0, color='k', linestyle='-', alpha=0.3)
-            self.ax2.set_xlabel('x')
-            self.ax2.set_ylabel('y')
-            self.ax2.set_title('Derivadas')
-            self.ax2.legend()
+            # Gráfico de f'(x)
+            self.ax2.plot(x_vals, df_vals, 'r-', linewidth=2, label="f'(x)")
             self.ax2.grid(True, alpha=0.3)
+            self.ax2.set_title("Derivada f'(x)", fontsize=10)
+            self.ax2.set_xlabel('x')
+            self.ax2.set_ylabel("f'(x)")
+            self.ax2.legend()
             
+            # Ajustar layout y actualizar
             self.fig.tight_layout()
             self.canvas.draw()
             
         except Exception as e:
-            print(f"Error creando gráficos: {e}")
-    
-    def limpiar_todo(self):
-        """Limpiar todos los resultados"""
+            print(f"Error actualizando gráfico: {e}")
+
+    def clear_all(self):
+        """Limpia todos los campos y resultados"""
+        # Limpiar campos
+        self.expr_var.set("")
+        self.derivative_var.set("Presiona 'Calcular f'(x)' para obtener la derivada")
+        self.points_var.set("0, 1, 2, -1, 0.5")
+        
         # Limpiar tabla
         for item in self.tree.get_children():
             self.tree.delete(item)
         
-        # Limpiar resultado
-        self.resultado_punto.set("Selecciona una función y un punto para calcular")
-        
         # Limpiar gráficos
-        if self.canvas and self.ax1 and self.ax2:
+        if self.canvas:
             self.ax1.clear()
             self.ax2.clear()
+            self.ax1.text(0.5, 0.5, 'Ingresa una función para graficar', 
+                         transform=self.ax1.transAxes, ha='center', va='center')
+            self.ax2.text(0.5, 0.5, 'Calcula la derivada para graficar', 
+                         transform=self.ax2.transAxes, ha='center', va='center')
             self.canvas.draw()
-    
-    def exportar_datos(self):
-        """Exportar datos de la tabla a archivo CSV"""
-        try:
-            from tkinter import filedialog
-            import csv
-            
-            if not self.tree.get_children():
-                messagebox.showwarning("Advertencia", "No hay datos para exportar")
-                return
-            
-            filename = filedialog.asksaveasfilename(
-                defaultextension=".csv",
-                filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
-            )
-            
-            if filename:
-                with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
-                    writer = csv.writer(csvfile)
-                    
-                    # Escribir encabezados
-                    headers = [self.tree.heading(col)['text'] for col in self.tree['columns']]
-                    writer.writerow(headers)
-                    
-                    # Escribir datos
-                    for item in self.tree.get_children():
-                        values = self.tree.item(item)['values']
-                        writer.writerow(values)
-                
-                messagebox.showinfo("Éxito", f"Datos exportados a {filename}")
-                
-        except Exception as e:
-            messagebox.showerror("Error", f"Error exportando datos: {str(e)}")
 
 
 def main():
+    """Función principal"""
     root = tk.Tk()
-    app = DerivadasGUI(root)
-    root.mainloop()
+    try:
+        app = DerivativasGUI(root)
+        root.mainloop()
+    except ImportError as e:
+        messagebox.showerror("Error", f"Faltan dependencias: {e}\n"
+                                    "Instala: pip install sympy matplotlib numpy")
+    except Exception as e:
+        messagebox.showerror("Error", f"Error iniciando aplicación: {e}")
 
 
 if __name__ == "__main__":
