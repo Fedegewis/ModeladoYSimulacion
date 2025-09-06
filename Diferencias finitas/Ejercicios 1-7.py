@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Sep  6 10:45:55 2025
-
-@author: fedeg
-"""
-
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -259,7 +252,7 @@ print("\n\n7. ANÁLISIS DE MOVIMIENTO - TABLA 2")
 print("-" * 40)
 
 # Datos de la segunda tabla
-t2 = np.array([0, 2, 4.2, 6, 8, 10, 12, 14, 16], dtype=float)
+t2 = np.array([0, 2, 4, 6, 8, 10, 12, 14, 16], dtype=float)
 x2 = np.array([0, 0.7, 1.8, 3.4, 5.1, 6.3, 7.3, 8.0, 8.4], dtype=float)
 
 # Calcular velocidad y aceleración
