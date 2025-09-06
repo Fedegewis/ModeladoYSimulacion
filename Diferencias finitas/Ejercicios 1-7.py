@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Sep  6 10:45:55 2025
+
+@author: fedeg
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -171,56 +178,89 @@ print(f"\nSegunda derivada exacta: {exacta_2:.8f}")
 aprox_2_central = segunda_derivada_central(f5, x, h)
 print(f"Segunda derivada (centrales): {aprox_2_central:.8f}, Error: {abs(exacta_2 - aprox_2_central):.8f}")
 
+# FUNCIONES PARA CALCULAR ACELERACIÓN CON DIFERENTES MÉTODOS
+def aceleracion_progresiva(x, t, i, h):
+    """Fórmula progresiva de 2do orden: a = (x[i+2] - 2*x[i+1] + x[i]) / h²"""
+    return (x[i+2] - 2*x[i+1] + x[i]) / (h**2)
+
+def aceleracion_central(x, t, i, h):
+    """Fórmula central de 2do orden: a = (x[i+1] - 2*x[i] + x[i-1]) / h²"""
+    return (x[i+1] - 2*x[i] + x[i-1]) / (h**2)
+
+def aceleracion_regresiva(x, t, i, h):
+    """Fórmula regresiva de 2do orden: a = (x[i] - 2*x[i-1] + x[i-2]) / h²"""
+    return (x[i] - 2*x[i-1] + x[i-2]) / (h**2)
+
+# Para espaciado irregular
+def aceleracion_central_irregular(x, t, i):
+    """Aceleración central para espaciado irregular"""
+    h1 = t[i] - t[i-1]      # paso hacia atrás
+    h2 = t[i+1] - t[i]      # paso hacia adelante
+    
+    # Fórmula para espaciado irregular (segunda derivada)
+    return (2/(h1*(h1+h2))) * x[i-1] - (2/(h1*h2)) * x[i] + (2/(h2*(h1+h2))) * x[i+1]
+
 # EJERCICIO 6: Análisis de movimiento con tabla de valores
 print("\n\n6. ANÁLISIS DE MOVIMIENTO - TABLA 1")
 print("-" * 40)
 
 # Datos de la primera tabla
-t1 = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8])
-x1 = np.array([0, 1.5, 4, 7.5, 12, 17.5, 24, 31.5, 40])
+t1 = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8], dtype=float)
+x1 = np.array([0, 1.5, 4, 7.5, 12, 17.5, 24, 31.5, 40], dtype=float)
 
 # Calcular velocidad usando diferencias centrales
 v1 = np.zeros_like(t1, dtype=float)
 a1 = np.zeros_like(t1, dtype=float)
 
+h = t1[1] - t1[0]  # paso constante = 1
+
 # Velocidades (diferencias centrales para puntos interiores)
 for i in range(1, len(t1)-1):
-    dt = t1[i+1] - t1[i-1]
-    dx = x1[i+1] - x1[i-1]
-    v1[i] = dx / dt
+    v1[i] = (x1[i+1] - x1[i-1]) / (2 * h)
 
 # Velocidades en los extremos (diferencias hacia adelante/atrás)
-v1[0] = (x1[1] - x1[0]) / (t1[1] - t1[0])
-v1[-1] = (x1[-1] - x1[-2]) / (t1[-1] - t1[-2])
+v1[0] = (x1[1] - x1[0]) / h
+v1[-1] = (x1[-1] - x1[-2]) / h
 
-# Aceleraciones
-for i in range(1, len(t1)-1):
-    dt = t1[i+1] - t1[i-1]
-    dv = v1[i+1] - v1[i-1]
-    a1[i] = dv / dt
+# ACELERACIONES USANDO FÓRMULAS DE SEGUNDA DERIVADA DIRECTAMENTE
+# Primer punto (progresiva)
+a1[0] = aceleracion_progresiva(x1, t1, 0, h)
 
-# Aceleraciones en los extremos
-a1[0] = (v1[1] - v1[0]) / (t1[1] - t1[0])
-a1[-1] = (v1[-1] - v1[-2]) / (t1[-1] - t1[-2])
+# Segundo punto (progresiva)
+a1[1] = aceleracion_progresiva(x1, t1, 1, h)
+
+# Puntos interiores (centrales)
+for i in range(2, len(t1)-2):
+    a1[i] = aceleracion_central(x1, t1, i, h)
+
+# Penúltimo punto (regresiva)
+a1[-2] = aceleracion_regresiva(x1, t1, len(x1)-2, h)
+
+# Último punto (regresiva)
+a1[-1] = aceleracion_regresiva(x1, t1, len(x1)-1, h)
 
 # Headers para tabla de movimiento
 t_header = "t(seg)"
 x_header = "x(m)"
 v_header = "v(m/s)"
 a_header = "a(m/s²)"
+metodo_header = "Método"
 
-print(f"{t_header:<8} {x_header:<8} {v_header:<10} {a_header:<10}")
-print("-" * 40)
+print(f"{t_header:<8} {x_header:<8} {v_header:<10} {a_header:<10} {metodo_header:<12}")
+print("-" * 55)
+
+metodos = ["Progresiva", "Progresiva", "Central", "Central", "Central", "Central", "Central", "Regresiva", "Regresiva"]
+
 for i in range(len(t1)):
-    print(f"{t1[i]:<8} {x1[i]:<8} {v1[i]:<10.2f} {a1[i]:<10.2f}")
+    print(f"{t1[i]:<8.0f} {x1[i]:<8.1f} {v1[i]:<10.2f} {a1[i]:<10.2f} {metodos[i]:<12}")
 
 # EJERCICIO 7: Análisis de movimiento - Tabla 2
 print("\n\n7. ANÁLISIS DE MOVIMIENTO - TABLA 2")
 print("-" * 40)
 
 # Datos de la segunda tabla
-t2 = np.array([0, 2, 4.2, 6, 8, 10, 12, 14, 16])
-x2 = np.array([0, 0.7, 1.8, 3.4, 5.1, 6.3, 7.3, 8.0, 8.4])
+t2 = np.array([0, 2, 4.2, 6, 8, 10, 12, 14, 16], dtype=float)
+x2 = np.array([0, 0.7, 1.8, 3.4, 5.1, 6.3, 7.3, 8.0, 8.4], dtype=float)
 
 # Calcular velocidad y aceleración
 v2 = np.zeros_like(t2, dtype=float)
@@ -228,7 +268,6 @@ a2 = np.zeros_like(t2, dtype=float)
 
 # Velocidades usando diferencias centrales adaptadas para espaciado irregular
 for i in range(1, len(t2)-1):
-    # Para espaciado irregular, usamos la fórmula de diferencias centrales
     h1 = t2[i] - t2[i-1]
     h2 = t2[i+1] - t2[i]
     v2[i] = (x2[i+1] - x2[i-1]) / (h1 + h2)
@@ -237,19 +276,28 @@ for i in range(1, len(t2)-1):
 v2[0] = (x2[1] - x2[0]) / (t2[1] - t2[0])
 v2[-1] = (x2[-1] - x2[-2]) / (t2[-1] - t2[-2])
 
-# Aceleraciones
+# ACELERACIONES para espaciado irregular usando fórmulas de segunda derivada
+# Primer punto: usar fórmula progresiva adaptada
+h1 = t2[1] - t2[0]
+h2 = t2[2] - t2[1]
+a2[0] = (2/(h1*(h1+h2))) * x2[0] - (2/(h1*h2)) * x2[1] + (2/(h2*(h1+h2))) * x2[2]
+
+# Puntos interiores: diferencias centrales para espaciado irregular
 for i in range(1, len(t2)-1):
-    h1 = t2[i] - t2[i-1]
-    h2 = t2[i+1] - t2[i]
-    a2[i] = (v2[i+1] - v2[i-1]) / (h1 + h2)
+    a2[i] = aceleracion_central_irregular(x2, t2, i)
 
-a2[0] = (v2[1] - v2[0]) / (t2[1] - t2[0])
-a2[-1] = (v2[-1] - v2[-2]) / (t2[-1] - t2[-2])
+# Último punto: fórmula regresiva adaptada
+h1 = t2[-2] - t2[-3]
+h2 = t2[-1] - t2[-2]
+a2[-1] = (2/(h1*(h1+h2))) * x2[-3] - (2/(h2*h1)) * x2[-2] + (2/(h2*(h1+h2))) * x2[-1]
 
-print(f"{t_header:<8} {x_header:<8} {v_header:<10} {a_header:<10}")
-print("-" * 40)
+metodos2 = ["Progresiva"] + ["Central"]*(len(t2)-2) + ["Regresiva"]
+
+print(f"{t_header:<8} {x_header:<8} {v_header:<10} {a_header:<10} {metodo_header:<12}")
+print("-" * 55)
+
 for i in range(len(t2)):
-    print(f"{t2[i]:<8} {x2[i]:<8} {v2[i]:<10.3f} {a2[i]:<10.3f}")
+    print(f"{t2[i]:<8.1f} {x2[i]:<8.1f} {v2[i]:<10.3f} {a2[i]:<10.3f} {metodos2[i]:<12}")
 
 # Análisis del comportamiento
 print("\n\nANÁLISIS DEL COMPORTAMIENTO:")
@@ -271,6 +319,13 @@ if np.mean(v2[4:]) < np.mean(v2[:4]):
 else:
     print("- Movimiento: Acelerando")
 
+print("\n\nFÓRMULAS UTILIZADAS:")
+print("-" * 20)
+print("Progresiva (2do orden): a = (x[i+2] - 2*x[i+1] + x[i]) / h²")
+print("Central (2do orden):    a = (x[i+1] - 2*x[i] + x[i-1]) / h²")
+print("Regresiva (2do orden):  a = (x[i] - 2*x[i-1] + x[i-2]) / h²")
+print("Espaciado irregular:    Fórmulas adaptadas usando h1 y h2")
+
 # Crear gráficos
 fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(12, 10))
 
@@ -279,4 +334,40 @@ ax1.plot(t1, x1, 'bo-', label='Posición')
 ax1.set_xlabel('Tiempo (s)')
 ax1.set_ylabel('Posición (m)')
 ax1.set_title('Tabla 1: Posición vs Tiempo')
-ax1.grid
+ax1.grid(True)
+ax1.legend()
+
+# Gráfico 2: Velocidad vs Tiempo - Tabla 1
+ax2.plot(t1, v1, 'ro-', label='Velocidad')
+ax2.set_xlabel('Tiempo (s)')
+ax2.set_ylabel('Velocidad (m/s)')
+ax2.set_title('Tabla 1: Velocidad vs Tiempo')
+ax2.grid(True)
+ax2.legend()
+
+# Gráfico 3: Posición vs Tiempo - Tabla 2
+ax3.plot(t2, x2, 'go-', label='Posición')
+ax3.set_xlabel('Tiempo (s)')
+ax3.set_ylabel('Posición (m)')
+ax3.set_title('Tabla 2: Posición vs Tiempo')
+ax3.grid(True)
+ax3.legend()
+
+# Gráfico 4: Aceleración - Ambas tablas
+ax4.plot(t1, a1, 'bo-', label='Tabla 1', alpha=0.7)
+ax4.plot(t2, a2, 'ro-', label='Tabla 2', alpha=0.7)
+ax4.set_xlabel('Tiempo (s)')
+ax4.set_ylabel('Aceleración (m/s²)')
+ax4.set_title('Comparación de Aceleraciones')
+ax4.grid(True)
+ax4.legend()
+
+plt.tight_layout()
+plt.show()
+
+print(f"\n\nRESUMEN DE MÉTODOS APLICADOS:")
+print("=" * 35)
+print("- Primer punto: Fórmula PROGRESIVA de 2do orden")
+print("- Puntos interiores: Fórmula CENTRAL de 2do orden")  
+print("- Último punto: Fórmula REGRESIVA de 2do orden")
+print("- Espaciado irregular: Fórmulas adaptadas para h1 ≠ h2")
