@@ -8,11 +8,11 @@ np.random.seed(0)
  
 # Definir la función a integrar
 def funcion(x, y):
-    return np.exp(2*x - y)  # Ejemplo: función gaussiana
+    return np.exp(3*x - 3*y)  # Ejemplo: función gaussiana
  
 # Límites de integración
 x_min, x_max = 0, 1
-y_min, y_max = 1, 2
+y_min, y_max = 0, 2
  
 # Número de puntos aleatorios para Montecarlo
 N = 10000  # Reducido para mejor visualización en la gráfica
